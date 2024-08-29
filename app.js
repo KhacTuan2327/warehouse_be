@@ -4,6 +4,7 @@ const warehouseRoutes = require('./routes/warehouseRoutes');
 const sensorRoutes = require('./routes/sensorRoutes');
 const sensorInfoRoutes = require('./routes/sensorInfoRoutes');
 const deviceRoutes = require('./routes/deviceRoutes');
+const alertsRoutes = require('./routes/alertsRoutes');
 const cors = require("cors")
 
 const app = express();
@@ -22,6 +23,7 @@ app.use('/api', warehouseRoutes);
 app.use('/api', sensorRoutes);
 app.use('/api', sensorInfoRoutes);
 app.use('/api', deviceRoutes)
+app.use('/api', alertsRoutes);
 
 
 // Kết nối đến cơ sở dữ liệu

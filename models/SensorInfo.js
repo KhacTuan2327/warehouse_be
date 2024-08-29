@@ -1,9 +1,8 @@
-// models/sensorInfo.js
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database'); // Điều chỉnh đường dẫn theo cấu trúc dự án của bạn
 
 const SensorInfo = sequelize.define('SensorInfo', {
-    id: {
+    info_id: {
         type: DataTypes.INTEGER,
         autoIncrement: true,
         primaryKey: true,

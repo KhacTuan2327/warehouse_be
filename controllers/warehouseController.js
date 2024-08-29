@@ -50,7 +50,7 @@ exports.updateWarehouse = async (req, res) => {
 
     // Cập nhật thông tin kho dựa vào warehouse_id
     const [updated] = await Warehouse.update(
-      { name, address, latitude, longitude },
+      { name, address, latitude, longitude, updated_at: new Date() },
       { where: { warehouse_id } }
     );
 
