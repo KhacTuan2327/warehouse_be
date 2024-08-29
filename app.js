@@ -2,6 +2,8 @@ const express = require('express');
 const sequelize = require('./config/database');
 const warehouseRoutes = require('./routes/warehouseRoutes');
 const sensorRoutes = require('./routes/sensorRoutes');
+const sensorInfoRoutes = require('./routes/sensorInfoRoutes');
+const deviceRoutes = require('./routes/deviceRoutes');
 const cors = require("cors")
 
 const app = express();
@@ -18,6 +20,8 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use('/api', warehouseRoutes);
 app.use('/api', sensorRoutes);
+app.use('/api', sensorInfoRoutes);
+app.use('/api', deviceRoutes)
 
 
 // Kết nối đến cơ sở dữ liệu

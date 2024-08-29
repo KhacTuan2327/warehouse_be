@@ -1,4 +1,4 @@
-const Warehouse = require("../models/warehouse");
+const Warehouse = require("../models/Warehouse");
 
 // Lấy tất cả kho
 exports.getAllWarehouses = async (req, res) => {

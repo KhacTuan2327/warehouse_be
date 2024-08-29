@@ -22,7 +22,7 @@ const Sensor = sequelize.define('Sensor', {
     allowNull: false,
   },
   status: {
-    type: DataTypes.STRING,
+    type: DataTypes.BOOLEAN,
     allowNull: false,
   },
   created_at: {

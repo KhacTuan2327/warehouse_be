@@ -36,27 +36,29 @@ exports.getSensors = async (req, res) => {
 exports.updateSensor = async (req, res) => {
     try {
         const { sensor_id } = req.params;
-        const { name, location, status } = req.body;
+        const { warehouse_name, location, status } = req.body;
 
-        // Check if the warehouse with the provided name exists
-        const warehouse = await Warehouse.findOne({ where: { name: name } });
+        // Kiểm tra xem kho với tên được cung cấp có tồn tại không
+        const warehouse = await Warehouse.findOne({ where: { name: warehouse_name } });
 
         if (!warehouse) {
             return res.status(404).json({ error: 'Không tìm thấy kho' });
         }
 
-        // Find the sensor by ID
+        // Tìm cảm biến theo ID
         const sensor = await Sensor.findByPk(sensor_id);
 
         if (!sensor) {
             return res.status(404).json({ error: 'Không tìm thấy cảm biến' });
         }
 
-        // Update the sensor data
-        sensor.warehouse_id = warehouse.warehouse_id;
-        sensor.location = location;
-        sensor.status = status;
-        await sensor.save();
+        // Cập nhật dữ liệu cảm biến với warehouse_id tương ứng
+        await sensor.update({
+            warehouse_id: warehouse.warehouse_id, // Cập nhật warehouse_id từ kho tương ứng
+            location: location,
+            status: status,
+            updated_at: new Date()
+        });
 
         res.status(200).json({ message: 'Cập nhật cảm biến thành công', sensor });
     } catch (error) {
