@@ -3,53 +3,53 @@
 const Sensor = require("../models/Sensor");
 const Warehouse = require("../models/Warehouse");
 const SensorInfo = require("../models/SensorInfo");
+const Alert = require("../models/Alert");
 
 // Hàm để lấy danh sách các cảm biến
 exports.getSensors = async (req, res) => {
-    try {
-      const sensors = await Sensor.findAll({
-        attributes: ["sensor_id", "location", "status", "updated_at"],
-        include: [
-          {
-            model: Warehouse,
-            attributes: ["name"], // Lấy tên kho từ bảng warehouses
-          },
-          {
-            model: SensorInfo,
-            attributes: [
-              "sensor_name",
-              "sensor_type",
-              "unit",
-              "min_value",
-              "max_value",
-              "noise_factor",
-            ], // Lấy thông tin từ bảng sensor_info
-          },
-        ],
-      });
-  
-      // Format dữ liệu trả về
-      const sensorList = sensors.map((sensor) => ({
-        sensor_id: sensor.sensor_id,
-        sensor_name: sensor.SensorInfo ? sensor.SensorInfo.sensor_name : null, // Kiểm tra SensorInfo có tồn tại không
-        sensor_type: sensor.SensorInfo ? sensor.SensorInfo.sensor_type : null, // Kiểm tra SensorInfo có tồn tại không
-        warehouse_name: sensor.Warehouse ? sensor.Warehouse.name : null, // Kiểm tra Warehouse có tồn tại không
-        status: sensor.status,
-        unit: sensor.SensorInfo ? sensor.SensorInfo.unit : null, // Kiểm tra SensorInfo có tồn tại không
-        min_value: sensor.SensorInfo ? sensor.SensorInfo.min_value : null, // Kiểm tra SensorInfo có tồn tại không
-        max_value: sensor.SensorInfo ? sensor.SensorInfo.max_value : null, // Kiểm tra SensorInfo có tồn tại không
-        noise_factor: sensor.SensorInfo ? sensor.SensorInfo.noise_factor : null, // Kiểm tra SensorInfo có tồn tại không
-        location: sensor.location,
-        updated_at: sensor.updated_at,
-      }));
-  
-      res.json(sensorList);
-    } catch (error) {
-      console.error("Error fetching sensor data:", error);
-      res.status(500).json({ error: "Có lỗi xảy ra khi lấy dữ liệu cảm biến." });
-    }
-  };
-  
+  try {
+    const sensors = await Sensor.findAll({
+      attributes: ["sensor_id", "location", "status", "updated_at"],
+      include: [
+        {
+          model: Warehouse,
+          attributes: ["name"], // Lấy tên kho từ bảng warehouses
+        },
+        {
+          model: SensorInfo,
+          attributes: [
+            "sensor_name",
+            "sensor_type",
+            "unit",
+            "min_value",
+            "max_value",
+            "noise_factor",
+          ], // Lấy thông tin từ bảng sensor_info
+        },
+      ],
+    });
+
+    // Format dữ liệu trả về
+    const sensorList = sensors.map((sensor) => ({
+      sensor_id: sensor.sensor_id,
+      sensor_name: sensor.SensorInfo ? sensor.SensorInfo.sensor_name : null, // Kiểm tra SensorInfo có tồn tại không
+      sensor_type: sensor.SensorInfo ? sensor.SensorInfo.sensor_type : null, // Kiểm tra SensorInfo có tồn tại không
+      warehouse_name: sensor.Warehouse ? sensor.Warehouse.name : null, // Kiểm tra Warehouse có tồn tại không
+      status: sensor.status,
+      unit: sensor.SensorInfo ? sensor.SensorInfo.unit : null, // Kiểm tra SensorInfo có tồn tại không
+      min_value: sensor.SensorInfo ? sensor.SensorInfo.min_value : null, // Kiểm tra SensorInfo có tồn tại không
+      max_value: sensor.SensorInfo ? sensor.SensorInfo.max_value : null, // Kiểm tra SensorInfo có tồn tại không
+      noise_factor: sensor.SensorInfo ? sensor.SensorInfo.noise_factor : null, // Kiểm tra SensorInfo có tồn tại không
+      location: sensor.location,
+      updated_at: sensor.updated_at,
+    }));
+
+    res.json(sensorList);
+  } catch (error) {
+    console.error("Error fetching sensor data:", error);
+    res.status(500).json({ error: "Có lỗi xảy ra khi lấy dữ liệu cảm biến." });
+  }
+};
 
 // Hàm để cập nhật dữ liệu cảm biến
 exports.updateSensor = async (req, res) => {
@@ -110,7 +110,7 @@ exports.deleteSensor = async (req, res) => {
     if (!sensor) {
       return res.status(404).json({ error: "Không tìm thấy cảm biến" });
     }
-
+    await Alert.destroy({ where: { sensor_id: sensor_id } });
     // Xóa cảm biến
     await sensor.destroy();
 

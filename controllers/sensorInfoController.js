@@ -147,17 +147,20 @@ exports.updateSensorInfo = async (req, res) => {
 // Xóa thông tin cảm biến
 exports.deleteSensorInfo = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { info_id } = req.params;
 
     // Kiểm tra xem cảm biến có tồn tại không
-    const sensor = await SensorInfo.findByPk(id);
+    const sensor = await SensorInfo.findByPk(info_id);
     if (!sensor) {
       return res.status(404).json({ error: "Cảm biến không được tìm thấy" });
     }
 
     // Xóa cảm biến
+    await Sensor.destroy({
+      where: { info_id: info_id },
+    });
     await SensorInfo.destroy({
-      where: { id },
+      where: { info_id },
     });
 
     res.status(200).json({ message: "Cảm biến đã được xóa thành công" });

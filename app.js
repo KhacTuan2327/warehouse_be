@@ -5,6 +5,7 @@ const sensorRoutes = require('./routes/sensorRoutes');
 const sensorInfoRoutes = require('./routes/sensorInfoRoutes');
 const deviceRoutes = require('./routes/deviceRoutes');
 const alertsRoutes = require('./routes/alertsRoutes');
+const userRoutes = require('./routes/userRoutes');
 const cors = require("cors")
 
 const app = express();
@@ -24,6 +25,7 @@ app.use('/api', sensorRoutes);
 app.use('/api', sensorInfoRoutes);
 app.use('/api', deviceRoutes)
 app.use('/api', alertsRoutes);
+app.use('/api', userRoutes);
 
 
 // Kết nối đến cơ sở dữ liệu

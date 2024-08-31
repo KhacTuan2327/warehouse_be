@@ -6,6 +6,6 @@ const sensorInfoController = require('../controllers/sensorInfoController');
 router.get('/sensor-info', sensorInfoController.getSensorInfoList);
 router.post('/sensor-info', sensorInfoController.addSensorInfo);
 router.put('/sensor-info/:info_id', sensorInfoController.updateSensorInfo);
-router.delete('/sensor-info/:info_id', sensorInfoController.updateSensorInfo);
+router.delete('/sensor-info/:info_id', sensorInfoController.deleteSensorInfo);
 
 module.exports = router;

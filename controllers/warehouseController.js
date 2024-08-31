@@ -1,4 +1,8 @@
 const Warehouse = require("../models/Warehouse");
+const Sensor = require("../models/Sensor");
+const Device = require("../models/Device");
+const Alert = require("../models/Alert");
+const { Op } = require("sequelize");
 
 // Lấy tất cả kho
 exports.getAllWarehouses = async (req, res) => {
@@ -43,8 +47,14 @@ exports.updateWarehouse = async (req, res) => {
     const { name, address, latitude, longitude } = req.body;
 
     // Kiểm tra trùng tên kho
-    const existingWarehouse = await Warehouse.findOne({ where: { name } });
-    if (existingWarehouse && existingWarehouse.warehouse_id !== warehouse_id) {
+    const existingWarehouse = await Warehouse.findOne({
+      where: {
+        name,
+        warehouse_id: { [Op.ne]: warehouse_id }, // Op.ne dùng để chỉ điều kiện "khác"
+      },
+    });
+
+    if (existingWarehouse) {
       return res.status(400).json({ error: "Tên kho đã tồn tại" });
     }
 
@@ -73,11 +83,22 @@ exports.updateWarehouse = async (req, res) => {
 exports.deleteWarehouse = async (req, res) => {
   try {
     const { warehouse_id } = req.params;
+
+    // Xóa các bản ghi liên quan trong bảng Sensors
+    await Sensor.destroy({ where: { warehouse_id } });
+
+    // Xóa các bản ghi liên quan trong bảng Alerts
+    await Alert.destroy({ where: { warehouse_id } });
+
+    // Xóa các bản ghi liên quan trong bảng Devices
+    await Device.destroy({ where: { warehouse_id } });
+
+    // Cuối cùng, xóa bản ghi trong bảng Warehouses
     const deleted = await Warehouse.destroy({ where: { warehouse_id } });
 
     if (deleted) {
       res.status(200).json({
-        message: `Kho với mã ${warehouse_id} đã được xóa thành công.`,
+        message: `Kho với mã ${warehouse_id} đã được xóa thành công, cùng với tất cả các bản ghi liên quan.`,
       });
     } else {
       res
@@ -85,6 +106,8 @@ exports.deleteWarehouse = async (req, res) => {
         .json({ error: `Không tìm thấy kho với mã ${warehouse_id}.` });
     }
   } catch (error) {
-    res.status(500).json({ error: "Lỗi khi xóa kho" });
+    res
+      .status(500)
+      .json({ error: "Lỗi khi xóa kho và các bản ghi liên quan." });
   }
 };
