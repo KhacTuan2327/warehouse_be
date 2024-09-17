@@ -3,6 +3,7 @@ const Sensor = require("../models/Sensor");
 const Device = require("../models/Device");
 const Alert = require("../models/Alert");
 const { Op } = require("sequelize");
+const sequelize = require("../config/database");
 
 // Lấy tất cả kho
 exports.getAllWarehouses = async (req, res) => {
@@ -81,33 +82,89 @@ exports.updateWarehouse = async (req, res) => {
 
 // Xóa kho
 exports.deleteWarehouse = async (req, res) => {
+  let t; // Khởi tạo biến t bên ngoài try-catch
   try {
     const { warehouse_id } = req.params;
 
-    // Xóa các bản ghi liên quan trong bảng Sensors
-    await Sensor.destroy({ where: { warehouse_id } });
+    // Bắt đầu transaction
+    t = await sequelize.transaction();
 
-    // Xóa các bản ghi liên quan trong bảng Alerts
-    await Alert.destroy({ where: { warehouse_id } });
+    // Tìm kho có warehouse_id tương ứng
+    const warehouse = await sequelize.query(
+      `SELECT * FROM "warehouses" WHERE "warehouse_id" = :warehouse_id`,
+      {
+        replacements: { warehouse_id },
+        type: sequelize.QueryTypes.SELECT,
+        transaction: t,
+      }
+    );
 
-    // Xóa các bản ghi liên quan trong bảng Devices
-    await Device.destroy({ where: { warehouse_id } });
-
-    // Cuối cùng, xóa bản ghi trong bảng Warehouses
-    const deleted = await Warehouse.destroy({ where: { warehouse_id } });
-
-    if (deleted) {
-      res.status(200).json({
-        message: `Kho với mã ${warehouse_id} đã được xóa thành công, cùng với tất cả các bản ghi liên quan.`,
-      });
-    } else {
-      res
-        .status(404)
-        .json({ error: `Không tìm thấy kho với mã ${warehouse_id}.` });
+    if (!warehouse || warehouse.length === 0) {
+      return res.status(404).json({ error: "Không tìm thấy kho" });
     }
+
+    // Lấy danh sách các sensor_id liên quan đến warehouse_id
+    const sensors = await sequelize.query(
+      `SELECT "sensor_id" FROM "sensors" WHERE "warehouse_id" = :warehouse_id`,
+      {
+        replacements: { warehouse_id },
+        type: sequelize.QueryTypes.SELECT,
+        transaction: t,
+      }
+    );
+
+    // const sensorIds = sensors.map((sensor) => sensor.sensor_id);
+
+    // Đặt các giá trị sensor_id thành null trong bảng Alerts dựa trên sensor_id
+    // if (sensorIds.length > 0) {
+    //   await sequelize.query(
+    //     `UPDATE "alerts" SET "sensor_id" = NULL WHERE "sensor_id" IN (:sensorIds)`,
+    //     {
+    //       replacements: { sensorIds },
+    //       type: sequelize.QueryTypes.UPDATE,
+    //       transaction: t,
+    //     }
+    //   );
+    // }
+
+    // Đặt các giá trị warehouse_id thành null trong bảng Sensors liên quan đến warehouse_id
+    await sequelize.query(
+      `UPDATE "sensors" SET "warehouse_id" = NULL WHERE "warehouse_id" = :warehouse_id`,
+      {
+        replacements: { warehouse_id },
+        type: sequelize.QueryTypes.UPDATE,
+        transaction: t,
+      }
+    );
+
+    // Đặt các giá trị warehouse_id thành null trong bảng Devices liên quan đến warehouse_id
+    await sequelize.query(
+      `UPDATE "devices" SET "warehouse_id" = NULL WHERE "warehouse_id" = :warehouse_id`,
+      {
+        replacements: { warehouse_id },
+        type: sequelize.QueryTypes.UPDATE,
+        transaction: t,
+      }
+    );
+
+    // Cuối cùng, xóa kho
+    await sequelize.query(
+      `DELETE FROM "warehouses" WHERE "warehouse_id" = :warehouse_id`,
+      {
+        replacements: { warehouse_id },
+        type: sequelize.QueryTypes.DELETE,
+        transaction: t,
+      }
+    );
+
+    // Commit transaction
+    await t.commit();
+
+    res.status(200).json({ message: "Xóa kho thành công" });
   } catch (error) {
-    res
-      .status(500)
-      .json({ error: "Lỗi khi xóa kho và các bản ghi liên quan." });
+    // Rollback transaction nếu có lỗi và nếu transaction đã được khởi tạo
+    if (t) await t.rollback();
+    console.error("Lỗi khi xóa kho:", error);
+    res.status(500).json({ error: "Lỗi máy chủ nội bộ" });
   }
 };
